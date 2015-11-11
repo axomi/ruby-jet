@@ -53,5 +53,12 @@ class Jet::Client::Products
     response = RestClient.get("#{Jet::Client::API_URL}/merchant-skus", headers.merge({ params: params }))
     JSON.parse(response.body) if response.code == 200
   end
+
+  def archive_product(merchant_sku)
+    headers = @client.token
+    body = {is_archived: true}
+    response = RestClient.put("#{Jet::Client::API_URL}/merchant-skus/#{merchant_sku}/status/archive", body.to_json, headers)
+    JSON.parse(response.body) if response.code == 200
+  end
 end
 
