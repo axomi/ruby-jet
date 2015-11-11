@@ -256,3 +256,38 @@ RSpec.describe Jet::Client::Orders, '#get_products' do
     end
   end
 end
+
+RSpec.describe Jet::Client::Orders, '#archive_product' do
+  context 'archive a product' do
+    it 'returns 204 on success' do
+      client = Jet.client
+
+      response = double
+      fake_header = { Authorization: 'Bearer notarealtoken' }
+      allow(client).to receive(:token) { fake_header }
+      allow(RestClient).to receive(:put)
+        .with("#{Jet::Client::API_URL}/merchant-skus/fakesku/status/archive", '{"is_archived":true}', fake_header) { response }
+      allow(response).to receive(:code) { 204 }
+      allow(response).to receive(:body) { nil }
+
+      inventory = client.products.archive_product('fakesku')
+      expect(inventory).to be_nil
+    end
+  end
+
+  context 'archive a product for non-existant sku' do
+    it 'returns 404 error' do
+      client = Jet.client
+
+      fake_header = { Authorization: 'Bearer notarealtoken' }
+      allow(client).to receive(:token) { fake_header }
+      allow(RestClient).to receive(:put)
+        .with("#{Jet::Client::API_URL}/merchant-skus/badsku/status/archive", '{"is_archived":true}', fake_header)
+        .and_raise(RestClient::ResourceNotFound)
+
+      expect { client.products.archive_product('badsku') }
+        .to raise_error RestClient::ResourceNotFound
+    end
+  end
+end
+
